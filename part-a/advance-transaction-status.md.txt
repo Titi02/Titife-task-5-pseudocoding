@@ -1,0 +1,141 @@
+# Part A1 — Pseudocode for `advanceTransactionStatus`
+
+## Function header
+
+**FUNCTION:** `advanceTransactionStatus`
+
+**INPUTS:**
+- `providerReference` (string): Identifies the payment transaction.
+- `userId` (string): Identifies the user associated with the transaction.
+- `amount` (number): The transaction amount in kobo.
+- `currency` (string, optional): The payment currency.
+- `planType` (PlanType or null, optional): The subscription plan.
+- `interval` (BillingInterval or null, optional): The billing interval.
+- `paystackTransactionId` (string or null, optional): The payment provider's transaction ID.
+- `status` (TransactionStatus): The requested transaction status.
+
+**OUTPUT:** A transaction record containing the resulting transaction details.
+
+**SIDE EFFECTS:**
+- Reads a transaction record from the database.
+- May create a transaction record.
+- May update an existing transaction record.
+
+**FAILS WHEN:**
+- A database lookup fails.
+- Creating a transaction record fails.
+- Updating a transaction record fails.
+
+## Numbered pseudocode steps
+
+1. CALL the database to find the earliest transaction matching the supplied provider reference.
+2. IF no matching transaction exists, CALL `upsertTransaction` with the supplied parameters and immediately RETURN its result.
+3. IF a matching transaction exists, check whether its current status is `INITIATED` or `VERIFIED`.
+4. WRITE the supplied amount to the existing transaction.
+5. WRITE the supplied currency, or `ngn` if the currency is `undefined` or `null`.
+6. IF the existing status is `INITIATED` or `VERIFIED`, WRITE the requested status. OTHERWISE, preserve the existing status.
+7. IF `planType` is not `undefined`, WRITE its supplied value, including `null` if that is the supplied value.
+8. IF `interval` is not `undefined`, WRITE its supplied value, including `null` if that is the supplied value.
+9. IF `paystackTransactionId` is not `undefined`, WRITE its supplied value, including `null` if that is the supplied value.
+10. CALL the database to update the existing transaction with the specified changes.
+11. RETURN the updated transaction record.
+
+## Important observation
+
+An existing transaction with status `SUCCESS`, `FAILED`, or `REFUNDED` keeps its current status. Other fields may still be updated.
+
+## Status
+
+
+## Hand-trace 1 — Normal case
+
+**Test input:**
+- Existing transaction status: `INITIATED`
+- Existing amount: 10,000 kobo
+- Requested status: `VERIFIED`
+- Requested amount: 15,000 kobo
+- Currency: Not supplied
+
+**Expected result:**
+- Final status: `VERIFIED`
+- Final amount: 15,000 kobo
+- Final currency: `ngn`
+
+**Reasoning:** The transaction exists, and `INITIATED` is a status that can be changed. The function updates the amount, changes the status to `VERIFIED`, and uses `ngn` as the default currency.
+
+
+
+## Hand-trace 2 — Edge case
+
+**Test input:**
+- Existing transaction status: `SUCCESS`
+- Existing amount: 10,000 kobo
+- Requested status: `VERIFIED`
+- Requested amount: 15,000 kobo
+- Currency: Not supplied
+
+**Expected result:**
+- Final status: `SUCCESS`
+- Final amount: 15,000 kobo
+- Final currency: `ngn`
+
+**Reasoning:** The existing status is `SUCCESS`, which is not eligible for a status change in this function. Therefore, the function preserves `SUCCESS` while updating the amount and applying the default currency.
+
+
+
+## Hand-trace 3 — Database failure
+
+**Test input:**
+- Provider reference: `PAY-003`
+- Database lookup: Fails because the database is unavailable
+- Requested status: `VERIFIED`
+- Requested amount: 15,000 kobo
+
+**Expected result:**
+- No transaction record is returned.
+- The function call rejects with the database error.
+- No transaction update or creation is performed by this function call.
+
+**Reasoning:** The database lookup occurs before the function checks whether a transaction exists. If the lookup fails, execution stops at that point. The function has no local error handler to catch the failure.
+
+
+
+
+## Code inspection findings
+
+I inspected the actual `advanceTransactionStatus` implementation in `src/server/payments/transaction.ts`.
+
+The code confirms three main branches:
+
+1. **No existing transaction:** The function calls `upsertTransaction` and returns its result. The helper may create a transaction with the requested status.
+2. **Existing status is `INITIATED` or `VERIFIED`:** The function updates the status to the requested status.
+3. **Existing status is `SUCCESS`, `FAILED`, or `REFUNDED`:** The function preserves the existing status while allowing other supplied fields to be updated.
+
+**Additional edge case:** `advanceTransactionStatus` selects the oldest matching transaction. However, `upsertTransaction` uses an unordered lookup. If duplicate records share a provider reference, the two functions may select different records.
+
+
+
+## Hand-trace comparison
+
+| Test | My predicted result | Actual result | Difference or correction |
+|---|---|---|---|
+| 1. Normal case: Existing `INITIATED` transaction; request `VERIFIED` | Status becomes `VERIFIED`; amount becomes 15,000 kobo; currency defaults to `ngn`. | PASS: Status became `VERIFIED`; amount became 15,000 kobo; currency was `ngn`. | No difference found. |
+| 2. Edge case: Existing `SUCCESS` transaction; request `VERIFIED` | Status stays `SUCCESS`; amount becomes 15,000 kobo; currency defaults to `ngn`. | PASS: Status stayed `SUCCESS`; amount became 15,000 kobo; currency was `ngn`. | No difference found. |
+| 3. Invalid case: Database lookup fails | Function call rejects with the database error; no transaction record is returned. | PASS: The function rejected, and neither the update nor create method was called. | No difference found. |
+
+## Actual execution and comparison
+
+**Test method:** Executed the real `advanceTransactionStatus` implementation using temporary test files and stubbed Prisma database methods. The development database was protected by setting `DATABASE_URL` to an unreachable dummy address before importing the function.
+
+**Results:**
+- Test 1 passed: An existing `INITIATED` transaction changed to `VERIFIED`; the amount became 15,000 kobo, and the currency defaulted to `ngn`.
+- Test 2 passed: An existing `SUCCESS` transaction kept its status; the amount became 15,000 kobo, and the currency defaulted to `ngn`.
+- Test 3 passed: When the database lookup rejected, the function call rejected, and neither the update nor create stub was called.
+
+**Overall:** All 12 automated checks passed. The actual results matched my hand-traced predictions in all three scenarios.
+
+**Difference or correction:** No discrepancy was found in these three scenarios.
+
+**Limitation:** The tests used stubbed database methods. They did not verify real database behaviour, SQL queries, or the duplicate-provider-reference edge case.
+
+**Safety:** No project files were modified, no packages were installed, and no development database queries ran.

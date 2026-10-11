@@ -1,0 +1,167 @@
+# Part B — Discount Code Validator
+
+## 1. Feature Description
+
+**Feature:** Discount Code Validator
+
+**Purpose:** Check whether a discount code can be used before applying a discount to an order.
+
+The validator must check that:
+
+1. The code exists.
+2. The code is active.
+3. The code has not expired.
+4. The order meets the minimum purchase amount.
+5. The code has not reached its usage limit.
+
+## 2. Planned Behaviour
+
+- If all checks pass, return that the code is valid.
+- If a check fails, return an appropriate error explaining why the code cannot be used.
+- Do not apply the discount or change the order total in this function.
+
+
+## 3. Pseudocode — My First Attempt
+
+**Inputs:** Discount code, current date, order amount, and discount-code details.
+
+1. RECEIVE the discount code and order details.
+2. CHECK whether the discount code exists.
+3. IF the code does not exist, RETURN an error and stop.
+4. CHECK whether the code is active.
+5. IF the code is inactive, RETURN an error and stop.
+6. CHECK whether the code has expired.
+7. IF the code has expired, RETURN an error and stop.
+8. CHECK whether the order meets the minimum purchase amount.
+9. IF the order is below the minimum, RETURN an error and stop.
+10. CHECK whether the usage limit has been reached.
+11. IF the usage limit has been reached, RETURN an error and stop.
+12. RETURN that the discount code is valid.
+
+**Output:** Either a valid result or an error explaining why the code cannot be used.
+
+
+## 4. Manual Trace Table
+
+| Test | Scenario | Expected Result | Reason |
+|---|---|---|---|
+| 1 | Code exists, active, not expired, minimum met, usage limit not reached | Valid | All checks pass |
+| 2 | Code does not exist | Invalid | Code lookup fails |
+| 3 | Code exists but is inactive | Invalid | Code is not active |
+| 4 | Code has expired | Invalid | Expiry date has passed |
+| 5 | Order amount equals the minimum purchase amount | Valid | The minimum amount is met |
+
+### Awkward Case
+
+**Test 5:** The order amount equals the minimum purchase amount exactly. The code should be accepted because the order meets the minimum, rather than falling below it.
+
+
+## 5. Implementation Decisions
+
+1. Validate the code's existence first, then active status, expiry, minimum order amount, and usage limit.
+2. An order amount equal to the minimum purchase amount is accepted.
+3. A code is expired when the current time is equal to or later than its expiry time.
+4. If the expiry date is `null`, skip the expiry check.
+5. A usage limit of zero or less makes the code unavailable.
+6. A negative order amount is invalid.
+7. Return the first validation failure and do not continue checking later rules.
+8. The function must not access the database or network or change any data.
+
+## 6. Implementation and Verification Results
+
+**Implementation file:** `lib/validation/discount-code.ts`
+
+**Test file:** `tests/records/discount-code.test.ts`
+
+The implementation was reviewed against the pseudocode and the following behaviours were confirmed:
+
+- Empty and whitespace-only codes are rejected.
+- Negative, `NaN`, and infinite order amounts are rejected.
+- Missing and inactive codes are rejected.
+- Codes that have expired, including exactly at the expiry time, are rejected.
+- An order amount equal to the minimum is accepted.
+- Zero or negative usage limits are rejected.
+- Codes that have reached their usage limit are rejected.
+- A valid code returns `{ ok: true, code }`.
+
+**Automated verification:**
+- Discount-code tests: 9 passed, 0 failed.
+- TypeScript check (`npx tsc --noEmit`): passed.
+- ESLint (`npm run lint`): passed — exit code 0, no errors or warnings. The first run was slow while modules were cold-cached; later runs completed normally.
+
+**Note:** These are implementation and automated-test results. They do not replace the five manual pseudocode traces required by the assessment.
+
+## 7. Manual Trace Results — Planned
+
+| Test | Input scenario | Expected result | Actual result |
+|---|---|---|---|
+| 1 | Valid code; all rules satisfied | Valid | Pending |
+| 2 | Code does not exist | `CODE_NOT_FOUND` | Pending |
+| 3 | Code is inactive | `CODE_INACTIVE` | Pending |
+| 4 | Code has expired | `CODE_EXPIRED` | Pending |
+| 5 | Order amount equals the minimum | Valid | Pending |
+
+### Comparison
+
+I will run the same five inputs against the implemented function and replace the pending actual results with the observed results. I will record any difference between the expected and actual behaviour.
+
+## 8. Manual Trace Results — Observed
+
+| Test | Input scenario | Expected result | Actual result |
+|---|---|---|---|
+| 1 | Valid code; all rules satisfied | Valid | Valid — test passed |
+| 2 | Code does not exist | `CODE_NOT_FOUND` | `CODE_NOT_FOUND` — test passed |
+| 3 | Code is inactive | `CODE_INACTIVE` | `CODE_INACTIVE` — test passed |
+| 4 | Code has expired | `CODE_EXPIRED` | `CODE_EXPIRED` — test passed |
+| 5 | Order amount equals the minimum | Valid | Valid — test passed |
+
+### Comparison
+
+All five selected scenarios matched their expected results. The automated test run reported nine tests passed and zero failures.
+
+The automated tests also covered empty and whitespace-only codes, negative and non-finite amounts, expiry at the exact current time, and usage-limit boundaries.
+
+## 9. Pseudocode vs. Implementation Comparison
+
+The implementation follows the validation order and return behaviour described in my pseudocode.
+
+### Step-to-code traceability (`lib/validation/discount-code.ts`)
+
+| Pseudocode step (§3) | Implementation |
+|---|---|
+| 1. RECEIVE the code and order details | `validateDiscountCode(code, details, orderAmount, now)` (lines 22–27) |
+| 2. CHECK whether the code exists | `if (!details.exists)` (lines 36–38) |
+| 3. IF it does not exist, error | `CODE_NOT_FOUND` (line 37) |
+| 4. CHECK whether the code is active | `if (!details.isActive)` (lines 40–42) |
+| 5. IF it is inactive, error | `CODE_INACTIVE` (line 41) |
+| 6. CHECK whether the code has expired | `details.expiresAt !== null && now.getTime() >= details.expiresAt.getTime()` (line 44) |
+| 7. IF it has expired, error | `CODE_EXPIRED` (line 45) |
+| 8. CHECK whether the order meets the minimum | `if (orderAmount < details.minimumOrderAmount)` (line 48) |
+| 9. IF below the minimum, error | `ORDER_BELOW_MINIMUM` (line 49) |
+| 10. CHECK whether the usage limit is reached | `if (details.usageLimit <= 0 \|\| details.usageCount >= details.usageLimit)` (line 52) |
+| 11. IF it is reached, error | `USAGE_LIMIT_REACHED` (line 53) |
+| 12. RETURN valid | `return { ok: true, code }` (line 56) |
+
+Two implementation guards are not present in the §3 pseudocode; they were later formalised as steps 2–5 of the corrected Part C pseudocode:
+
+| Implementation-only guard | Code | Test |
+|---|---|---|
+| Blank/whitespace code rejected | `code.trim() === ''` → `CODE_EMPTY` (lines 28–30) | `rejects an empty or whitespace-only code` (test lines 21–29) |
+| Invalid order amount rejected | `orderAmount < 0 \|\| !Number.isFinite(orderAmount)` → `INVALID_ORDER_AMOUNT` (lines 32–34) | `rejects non-finite and negative order amounts` (test lines 31–38) |
+
+### Pseudocode checks to tests (`tests/records/discount-code.test.ts`)
+
+| Check | Test |
+|---|---|
+| Exists | `rejects a code that does not exist` (lines 40–49) |
+| Active | `rejects an inactive code` (lines 51–60) |
+| Expired | `rejects a code expiring exactly at the current time` (lines 62–72) |
+| Minimum | `rejects when order amount is below the minimum` (lines 74–83); `accepts an order amount exactly equal to the minimum` (lines 85–94) |
+| Usage limit | `rejects when usage limit is zero or already reached` (lines 96–114) |
+| Valid | `returns success with the code for a fully valid input` (lines 116–125) |
+
+During review, additional edge cases were identified, including blank discount codes and non-finite order amounts (`NaN` and infinity). The implementation rejects these inputs.
+
+The implementation was tested against the expected behaviour. All nine automated tests passed, and the TypeScript check completed without errors. ESLint (`npm run lint`): passed — exit code 0, no errors or warnings. The first run was slow while modules were cold-cached; later runs completed normally.
+
+The comparison confirmed that the implementation follows the documented validation rules. No correction to the implementation was needed; the additional input checks were documented as improvements.

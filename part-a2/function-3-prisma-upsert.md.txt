@@ -1,0 +1,41 @@
+# Part A2 — Function 3: Prisma `user.upsert()`
+
+**Project:** Titife Records Access
+
+**Library:** Prisma
+
+**Source file:** `app/auth-actions.ts`
+
+**Purpose:** Finds an existing user by email or creates a new user if no match exists.
+
+## 1. My First Pseudocode Draft
+
+1. RECEIVE the submitted email.
+2. SEARCH the database for a user with that email.
+3. IF the user exists, keep the existing user unchanged.
+4. IF the user does not exist, create a new user with that email.
+5. RETURN the resulting user.
+6. IF the database operation fails, allow the error to propagate to the caller.
+
+
+## 2. AI Explanation Comparison
+
+**What I understood correctly:**
+- The code searches for a user using their email.
+- If the user exists, it remains unchanged because `update` is empty.
+- If the user does not exist, a new user is created.
+- The resulting user is returned.
+
+**Difference identified:**
+
+My first draft did not explain that a database failure causes an error to propagate and stops the remaining login steps.
+
+## 3. Source-Code Verification
+
+I checked `app/auth-actions.ts` and confirmed that the code uses the email to find or create a user. If the database operation fails, the error propagates because no error is caught in this section.
+
+**Conclusion:** The AI explanation matches my pseudocode and the source code.
+
+## 4. What I Learned
+
+I learned that `upsert()` combines finding an existing record with creating one when no match exists. I also learned to document what happens when a database operation fails.

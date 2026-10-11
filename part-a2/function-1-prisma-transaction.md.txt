@@ -1,0 +1,42 @@
+# Part A2 — Open-Source Library Functions
+
+## Function 1: Prisma `$transaction()`
+
+**Project:** Titife Records Access
+
+**Source file:** `lib/records/queries.ts`
+
+**Purpose:** Performs the record deletion and audit-log creation as one database transaction.
+
+### 1. My First Pseudocode Draft
+
+1. Begin a database transaction.
+2. Find the record matching the requesting user's ID and the record's public ID.
+3. If the record is not found, return `false` and stop.
+4. Create a deletion audit log containing the user and record details.
+5. Delete the matching record belonging to the requesting user.
+6. Return `true` if the operations complete successfully.
+7. If a database operation fails, roll back the transaction's database changes and allow the error to propagate to the caller.
+
+### 2. AI Explanation Comparison
+
+**What I understood correctly:**
+- The function finds the record using the owner's ID and public ID.
+- If no record is found, it returns `false`.
+- It creates the audit log before deleting the record.
+- It returns `true` when the operations succeed.
+- Database errors cause the transaction to roll back.
+
+**Difference identified:**
+
+My first draft omitted the check that verifies whether the deletion actually removed a record.
+
+### 3. Source-Code Verification
+
+I inspected `lib/records/queries.ts` and confirmed that the code checks `deleteResult.count === 0` and throws `new Error('Atomic delete failed')`.
+
+**Conclusion:** The AI was correct about this additional check. My first draft captured the main flow but omitted an important error-handling step.
+
+### 4. What I Learned
+
+I learned to document error-handling checks as well as the main steps and return values. I also learned to verify AI explanations against the actual source code.

@@ -1,0 +1,15 @@
+# Part C — Listener Feedback
+
+## Feedback from a Nontechnical Listener
+
+**Listener's feedback:**
+
+The listener understood that the discount-code validator checks whether a discount code can be used, and that pseudocode describes the steps before the actual code is written.
+
+They understood how the AI coding agent created an independent implementation and how both implementations were compared using ten different test cases.
+
+The listener also identified the main differences: the original implementation rejects empty discount codes and negative or invalid order amounts, while the AI-generated version handles some of these cases differently. They also noticed that the original uses `reason` for error results, whereas the AI-generated version uses `error`.
+
+**What this feedback shows:**
+
+The explanation communicated the purpose of the program, the comparison process, and the key findings in a way the listener could understand.

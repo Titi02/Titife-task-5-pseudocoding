@@ -1,0 +1,46 @@
+# Part A3 — Bug Identification
+
+## 1. Pseudocode: Actual Behaviour
+
+1. Receive the flight's seat capacity, existing bookings, and requested seats.
+2. Check that the seat capacity is a positive integer.
+3. Check that the existing bookings are provided as a list.
+4. Validate each booking and calculate the total number of seats already booked.
+5. Reject the request if existing bookings exceed the flight capacity.
+6. Check that the requested seats are a positive integer.
+7. Calculate the available seats by subtracting booked seats from total capacity.
+8. If the requested seats are greater than or equal to the available seats, reject the booking.
+9. Otherwise, calculate the remaining seats and allow the booking.
+
+## 2. Pseudocode: Intended Behaviour
+
+1. Receive the flight's seat capacity, existing bookings, and requested seats.
+2. Validate the capacity, existing bookings, and requested seats.
+3. Calculate the total number of seats already booked.
+4. Calculate the available seats.
+5. If the requested seats are greater than the available seats, reject the booking.
+6. If the requested seats are equal to or less than the available seats, allow the booking.
+7. Calculate and return the remaining seats after booking.
+
+## 3. Difference Between Actual and Intended Behaviour
+
+The actual implementation rejects a booking when the requested seats are exactly equal to the available seats. The intended behaviour is to allow the booking when the customer requests all remaining seats.
+
+## 4. Bug Identified and Example Input
+
+**Bug:** The condition `requestedSeats >= availableSeats` incorrectly rejects bookings when the requested seats equal the available seats.
+
+**Example input:**
+- Seat capacity: 100
+- Existing bookings: 60 seats
+- Requested seats: 40
+
+**Actual result:** The function rejects the booking.
+
+**Expected result:** The function should allow the booking, with zero seats remaining.
+
+**Correction:** Change `requestedSeats >= availableSeats` to `requestedSeats > availableSeats`.
+
+## 5. Source Note
+
+This bug is presented as a self-contained illustrative snippet. No corresponding source file for the booking function is present in the Task 5 folder or in the linked projects on this machine: a workspace-wide search for `availableSeats`, `requestedSeats`, `seatCapacity`, and the generic phrases returned no matches. No source file is cited here, so the bug is treated as hypothetical rather than taken from a real file. If the exercise supplied a source file, its path should be recorded here.

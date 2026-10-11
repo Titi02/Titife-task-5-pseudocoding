@@ -1,0 +1,26 @@
+# Part C — Corrected Pseudocode for the AI
+
+## Pseudocode — Corrected
+
+The original first attempt listed only the five validation rules and did not validate the inputs themselves. This corrected version adds a blank/whitespace-code check (steps 2–3) and a finite, non-negative order-amount check (steps 4–5) before the existence check, and renumbers the remaining steps.
+
+**Inputs:** Discount code, current date, order amount, and discount-code details.
+
+1. RECEIVE the discount code and order details.
+2. CHECK whether the discount code is empty or contains only whitespace.
+3. IF the code is empty or whitespace-only, RETURN an error and stop.
+4. CHECK whether the order amount is a finite number that is not negative.
+5. IF the order amount is negative or not a finite number, RETURN an error and stop.
+6. CHECK whether the discount code exists.
+7. IF the code does not exist, RETURN an error and stop.
+8. CHECK whether the code is active.
+9. IF the code is inactive, RETURN an error and stop.
+10. CHECK whether the code has expired.
+11. IF the code has expired, RETURN an error and stop.
+12. CHECK whether the order meets the minimum purchase amount.
+13. IF the order is below the minimum, RETURN an error and stop.
+14. CHECK whether the usage limit has been reached.
+15. IF the usage limit has been reached, RETURN an error and stop.
+16. RETURN that the discount code is valid.
+
+**Output:** Either a valid result or an error explaining why the code cannot be used.

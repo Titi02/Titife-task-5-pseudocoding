@@ -1,0 +1,22 @@
+# Part C — Original Pseudocode Supplied to the AI
+
+This is the original five-rule pseudocode that was supplied to the AI coding agent, before the C2 correction. It is preserved here so the original input remains available for comparison; the corrected version is kept in `pseudocode-for-ai.md.txt`.
+
+**Inputs:** Discount code, current date, order amount, and discount-code details.
+
+1. RECEIVE the discount code and order details.
+2. CHECK whether the discount code exists.
+3. IF the code does not exist, RETURN an error and stop.
+4. CHECK whether the code is active.
+5. IF the code is inactive, RETURN an error and stop.
+6. CHECK whether the code has expired.
+7. IF the code has expired, RETURN an error and stop.
+8. CHECK whether the order meets the minimum purchase amount.
+9. IF the order is below the minimum, RETURN an error and stop.
+10. CHECK whether the usage limit has been reached.
+11. IF the usage limit has been reached, RETURN an error and stop.
+12. RETURN that the discount code is valid.
+
+**Output:** Either a valid result or an error explaining why the code cannot be used.
+
+**Source of this wording:** recovered verbatim from `part-b/discount-code-validator.md.txt` section 3 ("Pseudocode — My First Attempt") and from the pre-correction version of `part-c/pseudocode-for-ai.md.txt`, and corroborated by the C2 "Original ambiguity" quotation in `part-c/implementation-comparison.md`. No wording was invented.
